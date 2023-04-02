@@ -2,7 +2,7 @@
 Editted on Tue Dec 14 2021 @author: toru
 """
 
-import NAM2 as model
+import NAM
 import pandas as pd
 import os
 
@@ -71,11 +71,9 @@ max_iter = 20
 #####################################################################################
 # %% functions
 
-def List_FlowPar(Fpar, Mode):
-    ################ edited by toru in 2021 ###############################            
+def List_FlowPar(Fpar, Mode):            
     if Mode == 'Calibration':
-        caliblen = caliblen
-        calibnum = calibnum
+        calibnum = [val['Default'] for val in Parameters.values()]
         calibMin = [val['Min'] for val in Parameters.values()]
         calibMax = [val['Max'] for val in Parameters.values()]
         list_Fpar=[]
@@ -109,7 +107,7 @@ def Main():
         lines = f.readlines()
 
     area = float(lines[0])
-    MyModel=model.NAM(StartDate, EndDate, EndWUDate, time_step, area)
+    MyModel=NAM.NAM(StartDate, EndDate, EndWUDate, time_step, area)
     MyModel.input_timeseries(flow_df, pet_df, precip_df)
 
     # %% Initial condition (optional)
@@ -143,7 +141,7 @@ def Main():
             MyModel.run_NAMModel(list_Fpar, OUTPUT_dir)                                  #running & output simulation
             
             # check errors
-            efficiency = model.AnalizeNAM(list_Fpar, MyModel.flow, MyModel.Total_flow, OUTPUT_dir)
+            efficiency = NAM.AnalizeNAM(list_Fpar, MyModel.flow, MyModel.Total_flow, OUTPUT_dir)
             efficiency.calc()
             
             # find the best parameter-set
@@ -172,7 +170,7 @@ def Main():
         #running & output simulation
         MyModel.run_NAMModel(list_Fpar, OUTPUT_dir, isplot=isplot, isoutput=isoutput)
         #analyze output data
-        efficiency = model.AnalizeNAM(list_Fpar, MyModel.flow, MyModel.Total_flow, OUTPUT_dir)
+        efficiency = NAM.AnalizeNAM(list_Fpar, MyModel.flow, MyModel.Total_flow, OUTPUT_dir)
         efficiency.calc()
         
 if __name__ == '__main__':
