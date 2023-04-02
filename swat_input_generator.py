@@ -50,6 +50,8 @@ class SWATplusInputs:
             extention of selected weather input file type (see File_TYPES).
 
         '''
+        os.makedirs(self.path, exist_ok=True)
+
         with open(os.path.join(self.path, ext+'.cli'), 'w') as f:
             #create one <ext>.cli file            
             f.write('{}: {} file names - file written by {} {}\n'.format(
@@ -57,40 +59,44 @@ class SWATplusInputs:
             f.write('filename\n')
             
             for ID, data in self.Datasets.items():
-                if ext in self.Datasets[ID]['daily_datasets'].keys():
+                try:
                     station_name = data['name']
-                    datafilename = station_name+'.'+ext
-                    f.write('{}\n'.format(datafilename))
-                    
+                    datafilename = station_name+'.'+ext   
                     #create <station name>.<ext> files
                     self._weather_data_files_out(ID, ext, datafilename)
+
+                    f.write('{}\n'.format(datafilename))
+
+                except:
+                    pass
 
         print('saved {}'.format(ext+'.cli'))
 
 
     def _weather_data_files_out(self, ID, ext, datafilename):
         datasets = self.Datasets[ID]
-        df_daily = datasets['daily_datasets']
+        df_daily = datasets[ext]
         
         with open(os.path.join(self.path, datafilename), 'w') as f:
             f.write('{}: {} data - file written by {} {}\n'.format(
                 datafilename, self.file_types[ext], self.editor, self.ct))
                     
-            number_of_year = df_daily.shape[0]//365+1
+            number_of_year = df_daily.index[-1].year - df_daily.index[0].year + 1
             time_step = 0
             
             f.write('nbyr     tstep       lat       lon      elev\n')
             f.write('{:>4d} {:>9d} {:>9.3f} {:>9.3f} {:>9.3f}\n' .format(
                 number_of_year, time_step, datasets['lat'], datasets['lon'], datasets['elev']))
             
-            for index, row in df_daily.iterrows():
                 #       year, day of year, data
-                if ext=='tmp':
+            if ext=='tmp':
+                for index, row in df_daily.iterrows():
                     f.write('{:>4d} {:>4d} {:>10.5f} {:>10.5f}\n'.format(
-                        int(row['year']), int(row['day']), row['tmp_max'], row['tmp_min']))
-                else:                        
+                        index.year, index.timetuple().tm_yday, row['tmp_max'], row['tmp_min']))
+            else:
+                for index, row in df_daily.iteritems():
                     f.write('{:>4d} {:>4d} {:>10.5f}  \n'.format(
-                        int(row['year']), int(row['day']), row[ext]))
+                        index.year, index.timetuple().tm_yday, row))
         
         print('saved '+datafilename)
 
@@ -129,27 +135,50 @@ def read_station_data(path):
 
 # %%
 File_TYPES = {
-    'hmd' : 'Relative humidity',
+#    'hmd' : 'Relative humidity',
     'pcp' : 'Precipitation',
     'tmp' : 'Temperature',
-    'wnd' : 'Wind speed',
-    'slr' : 'Solar radiation',
+#    'wnd' : 'Wind speed',
+#    'slr' : 'Solar radiation',
 }
 
+# %%
 if __name__ == '__main__':
     CSV_folder = r'./csv/'
     Station_Datasets = read_station_data(os.path.join(CSV_folder, 'WGEN_stat.csv'))
+    nan = -99
     
-    for ID, station in Station_Datasets.items():
-        datafile = station['name']+'.csv'
-        daily_datasets = pd.read_csv(os.path.join(CSV_folder, datafile))
-        
-        print('Reading {}...'.format(datafile))
-        Station_Datasets[ID]['daily_datasets'] = daily_datasets
-    
-    SWAT = SWATplusInputs(File_TYPES, Station_Datasets)
-    SWAT.path = './weather_swat_plus'
-    os.makedirs(SWAT.path, exist_ok=True)
-
     for ext in File_TYPES.keys():
+        if ext == 'tmp':
+            datafile_max = 'tmp_max.csv'
+            datafile_min = 'tmp_min.csv'
+            print('Reading {}, {}...'.format(datafile_max, datafile_min))
+            daily_datasets_min = pd.read_csv(os.path.join(CSV_folder, datafile_min))
+            daily_datasets_max = pd.read_csv(os.path.join(CSV_folder, datafile_max))
+            
+            for key, value in Station_Datasets.items():
+                try:
+                    daily_datasets = pd.concat([daily_datasets_max[value['name']], daily_datasets_min[value['name']]], axis=1)
+                    daily_datasets.index = pd.to_datetime(daily_datasets_min['date'], format='%d/%m/%Y')
+                    daily_datasets.columns = ['tmp_max', 'tmp_min']
+                    daily_datasets = daily_datasets.fillna(nan)
+
+                    Station_Datasets[key][ext] = daily_datasets
+                except:
+                    print('missing data at ', value['name'])
+        else:
+            datafile = ext+'.csv'
+            print('Reading {}...'.format(datafile))
+            daily_datasets = pd.read_csv(os.path.join(CSV_folder, datafile))
+            daily_datasets.index = pd.to_datetime(daily_datasets['date'], format='%d/%m/%Y')
+            daily_datasets = daily_datasets.fillna(nan)
+    
+            for key, value in Station_Datasets.items():
+                try:
+                    Station_Datasets[key][ext] = daily_datasets[value['name']]
+                except:
+                    print('missing data at ', value['name'])
+
+        SWAT = SWATplusInputs(File_TYPES, Station_Datasets)
+        SWAT.path = './weather_swat_plus'
         SWAT.weather_inputs_out(ext)
