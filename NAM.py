@@ -342,13 +342,13 @@ class NAM:
                 if isplot:
                     self.plot_outputs(title=str(j))
     
-        self.Total_flow = pd.DataFrame(self.Total_flow, index=self.sim_time)
-        self.Evapotranspiration = pd.DataFrame(self.Evapotranspiration, index=self.sim_time)
-        self.Quick_flow = pd.DataFrame(self.Quick_flow, index=self.sim_time)
-        self.Base_flow = pd.DataFrame(self.Base_flow, index=self.sim_time)
-        self.Snow_pack = pd.DataFrame(self.Snow_pack, index=self.sim_time)
-        self.Inter_flow = pd.DataFrame(self.Inter_flow, index=self.sim_time)
-        self.Overland_flow = pd.DataFrame(self.Overland_flow, index=self.sim_time)
+        self.Total_flow = pd.DataFrame(self.Total_flow, index=self.sim_time)[self.EndWU:]
+        self.Evapotranspiration = pd.DataFrame(self.Evapotranspiration, index=self.sim_time)[self.EndWU:]
+        self.Quick_flow = pd.DataFrame(self.Quick_flow, index=self.sim_time)[self.EndWU:]
+        self.Base_flow = pd.DataFrame(self.Base_flow, index=self.sim_time)[self.EndWU:]
+        self.Snow_pack = pd.DataFrame(self.Snow_pack, index=self.sim_time)[self.EndWU:]
+        self.Inter_flow = pd.DataFrame(self.Inter_flow, index=self.sim_time)[self.EndWU:]
+        self.Overland_flow = pd.DataFrame(self.Overland_flow, index=self.sim_time)[self.EndWU:]
         
         pd.DataFrame(list_Fpar).to_csv(OUTPUT_dir+'/Flow_Parameters.csv', header=self.para_name)
         if isoutput:
