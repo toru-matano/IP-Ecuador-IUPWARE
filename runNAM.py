@@ -149,7 +149,7 @@ def Main():
             MyModel.run_NAMModel(list_Fpar, OUTPUT_dir)
             
             # check errors
-            efficiency = NAM.AnalizeNAM(list_Fpar, MyModel.flow, MyModel.Total_flow, OUTPUT_dir)
+            efficiency = NAM.AnalizeNAM(list_Fpar, MyModel.flow_df, MyModel.Total_flow, OUTPUT_dir)
             efficiency.calc()
             
             # find the best set of parameters
@@ -180,7 +180,7 @@ def Main():
         #running NAM with one time
         MyModel.run_NAMModel(list_Fpar, OUTPUT_dir, isplot=isplot, isoutput=isoutput)
         #analyze output data
-        efficiency = NAM.AnalizeNAM(list_Fpar, MyModel.flow, MyModel.Total_flow, OUTPUT_dir)
+        efficiency = NAM.AnalizeNAM(list_Fpar, MyModel.flow_df, MyModel.Total_flow, OUTPUT_dir)
         efficiency.calc()
         
 if __name__ == '__main__':
