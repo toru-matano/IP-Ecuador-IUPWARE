@@ -12,10 +12,11 @@ Menu = {
     1: 'One-time',
     2: 'Calibration'
     }
-selectMode = 2                                                            #select 1, 2
+selectMode = 2                                                              #select 1, 2
 
 ##Mode=='Calibration'
-caliblen = 10                                                            #separation number
+caliblen = 10                                                               #separation number
+calib_name = 'NSE'                                                          # NSE, LNSE, PBIAS
 
 Parameters = {
     # Min = [5, 50, 0.0, 150, 3, 3, 0, 0, 0, 500, 2, -3]
@@ -136,10 +137,11 @@ def Main():
     
     # %% Running model
     Optimal = [val['Default'] for val in Parameters.values()]
-    i = 0
+    i = 1
 
     if Mode == 'Calibration':
         while True:
+            print('Iteration: {}'.format(i))
             # to prevent large numbers of iteration
             if i > max_iter:
                 break
@@ -154,13 +156,14 @@ def Main():
             efficiency = NAM.AnalizeNAM(list_Fpar, MyModel.flow_df, MyModel.Total_flow, OUTPUT_dir)
             efficiency.calc()
             
-            # find the best set of parameters
-            data = efficiency.data.sort_values(by=['NSE'], ascending=False)
+            # find the best set of parameters (sort descending by, for example, NSE)
+            data = efficiency.data.sort_values(by=[calib_name], ascending=False)
+            # new optimal parameters: first row of sorted data
             New_Optimal = data.iloc[0].values[3:].tolist()
             
             # break if the best parameters was the same as previous ones
             if New_Optimal == Optimal:
-                print('Iteration: {}\nOptimal values\n{}'.format(i+1, Optimal))
+                print('Calibration Finished\nOptimal values: \n', *Optimal)
                 break
             # update parameters
             Optimal = New_Optimal
