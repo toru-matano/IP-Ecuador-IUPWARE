@@ -61,6 +61,8 @@ class NAM:
         
         self.snow = False
         
+        self.DEBUG = False
+        
         #               Umax, Lmax, CQOF, CKIF, CK1, CK2, TOF, TIF, TG, CKBF, Csnow, T0
         self.para_name = ['Umax', 'Lmax', 'CQOF', 'CKIF', 'CK1', 'CK2', 'TOF', 'TIF', 'TG', 'CKBF', 'Csnow', 'T0']
         self.paramMin = [ 5,   50, 0.0,  150,  3,  3,   0,   0,    0,  500, 2, -3]
@@ -312,14 +314,15 @@ class NAM:
             if self.invalid:
                 print('Simulation aborted because one of your parameters is out of range (see message above).')
             else:
-                print('**********************************************************************\n' \
-                      'Summary of your inputs:\nSTART DATE: \t{}END DATE: \t{}TIME STEP: \t{}' \
-                      '\nCalibration parameters:\n'.format(
-                          self.Start, self.End, self.time_step))
-                print(*self.parameters)
-                print(*self.parameters.values())
-                print('**********************************************************************\n' \
-                      'Running simulation...')
+                if DEBUG:
+                    print('**********************************************************************\n' \
+                          'Summary of your inputs:\nSTART DATE: \t{}END DATE: \t{}TIME STEP: \t{}' \
+                          '\nCalibration parameters:\n'.format(
+                              self.Start, self.End, self.time_step))
+                    print(*self.parameters)
+                    print(*self.parameters.values())
+                    print('**********************************************************************\n' \
+                          'Running simulation...')
                 #for date in self.sim_time:
                 for i in range(len(self.Qt)):
                     self._onestep(i)
@@ -375,7 +378,6 @@ class AnalizeNAM():
             #print(self.data[i])
         #print(self.data)
         self.write_errors()
-        print('finished analyzing')
         
     def NSE(self):
         A = np.nansum(np.square(self.dataO-self.dataS))
