@@ -96,15 +96,12 @@ class NAM:
                   'Setting the end date to the last date where all data is available: {}\n'.format(
                       self.End), Warning)    
 
-        flow_df = flow_df.loc[self.sim_time]
-        flow_df = flow_df.where(flow_df>=0)
-        self.flow = flow_df.values.flatten()
-        pet_df = pet_df.loc[self.sim_time]
-        pet_df = pet_df.where(pet_df>=0)
-        self.pet = pet_df.values.flatten()
-        precip_df = precip_df.loc[self.sim_time]
-        precip_df = precip_df.where(precip_df>=0)
-        self.precip = precip_df.values.flatten()
+        self.flow_df = flow_df.loc[self.sim_time]
+        self.flow = self.flow_df.values.flatten()
+        self.pet_df = pet_df.loc[self.sim_time]
+        self.pet = self.pet_df.values.flatten()
+        self.precip_df = precip_df.loc[self.sim_time]
+        self.precip = self.precip_df.values.flatten()
 
         if self.snow:
             try:
@@ -112,8 +109,8 @@ class NAM:
                 end_temp = pd.Timestamp(temp_df['Year'].iloc[-1],temp_df['Month'].iloc[-1],temp_df['Day'].iloc[-1], temp_df['Hour'].iloc[-1])
                 time_temp = pd.date_range(start_temp,end_temp, freq = self.time_step)
                 temp_df = pd.DataFrame(data=temp_df.iloc[:,4:].values, index=time_temp)
-                temp_df = temp_df.loc[self.sim_time]
-                self.temp = temp_df.values.flatten()
+                self.temp_df = temp_df.loc[self.sim_time]
+                self.temp = self.temp_df.values.flatten()
             except:
                 warnings.warn("Temperature file not provided. Snow melt cannot be simulated", Warning)
                 self.snow = False
@@ -358,7 +355,7 @@ class NAM:
 class AnalizeNAM():
     def __init__(self, list_Fpar, dataO, Total_flow, folderName='.'):
 # read observed data
-        self.dataO = dataO
+        self.dataO = dataO.loc[Total_flow.index].values
         self.Total_flow = Total_flow
         self.aveO = np.nanmean(self.dataO)
 # get file paths
