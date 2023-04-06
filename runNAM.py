@@ -68,6 +68,7 @@ Ss = 0                                                                  # extra 
 Sw = 0
 
 max_iter = 20
+DEBUG = False
 
 #####################################################################################
 # %% functions
@@ -130,6 +131,7 @@ def Main():
     MyModel.OF = OF
     MyModel.relU = relU
     MyModel.relL = relL
+    MyModel.DEBUG = DEBUG
     #======================================================================
     
     # %% Running model
@@ -158,7 +160,7 @@ def Main():
             
             # break if the best parameters was the same as previous ones
             if New_Optimal == Optimal:
-                print('Iteration {} times\nOptimal values\n{}'.format(i+1, Optimal))
+                print('Iteration: {}\nOptimal values\n{}'.format(i+1, Optimal))
                 break
             # update parameters
             Optimal = New_Optimal
