@@ -12,7 +12,7 @@ Menu = {
     1: 'One-time',
     2: 'Calibration'
     }
-selectMode = 2                                                            #select 0, 1, 2
+selectMode = 2                                                            #select 1, 2
 
 ##Mode=='Calibration'
 caliblen = 10                                                            #separation number
@@ -38,22 +38,22 @@ Parameters = {
 
 # Define simulation warm-up period (YYYY-MM-DD HH)
 
-StartDate = '2000-01-01'                                             #Defining starting date of the simulation
-EndDate = '2006-12-31'                                               # Defining ending date of the simulation
-EndWUDate = '2001-12-31'                                             # Defining ending date of warming-up period
+StartDate = '2000-01-01'                                                # Defining starting date of the simulation
+EndDate = '2006-12-31'                                                  # Defining ending date of the simulation
+EndWUDate = '2001-12-31'                                                # Defining ending date of warming-up period
     
 time_step = 'D'                                                         # D: daily, H: hourly
 
-OUTPUT_dir = 'test'
-DATA_dir=r'Data'                                                      # input folder
+OUTPUT_dir = 'test'                                                     # output folder
+DATA_dir=r'Data'                                                        # input folder
 
-sub_area = 'SubCatchmArea.csv'                                          # input data
+sub_area = 'SubCatchmArea.csv'                                          # input data files
 flow = 'Flow.xlsx'
 pet = 'PET.xlsx'
 precip = 'Precip.xlsx'
 #Temp = 'Temp.xlsx'
 
-relU = 0.08                                                              # Initial values for states
+relU = 0.08                                                             # Initial values for states
 relL = 0.05
 OF = 0.0
 OFp = 0.0
@@ -85,8 +85,10 @@ def List_FlowPar(Fpar, Mode):
                 Fpar2 = Fpar.copy()
                 Fpar2[j] = ((caliblen-i-1)*Min+i*Max)/(caliblen-1)
                 list_Fpar.append(Fpar2)
-    else:                                                                   #onetime calculation
+    
+    else:             #one-time calculation
         list_Fpar=[Fpar]
+    
     return list_Fpar
 
 def Main():
@@ -98,19 +100,25 @@ def Main():
     fh_precip = os.path.join(DATA_dir,precip)
     fh_sub_area = os.path.join(DATA_dir,sub_area)
 
+    # Obtain time series
     flow_df = pd.read_excel(fh_flow, sheet_name ='Flow', usecols=[0,1,2,3,4])
     pet_df = pd.read_excel(fh_pet, sheet_name ='PET', usecols=[0,1,2,3,4])
     precip_df = pd.read_excel(fh_precip, sheet_name='Precip', usecols=[0,1,2,3,4])
-    # temp_df = pd.read_excel(fh_temp, sheet_name='Temp', usecols = [0,1,2,3,4])
-
+    try:
+        temp_df = pd.read_excel(fh_temp, sheet_name='Temp', usecols = [0,1,2,3,4])
+    except:
+        pass
+    
     with open(fh_sub_area) as f:
         lines = f.readlines()
-
     area = float(lines[0])
+    
+    # setup NAM
     MyModel=NAM.NAM(StartDate, EndDate, EndWUDate, time_step, area)
+    # update time series
     MyModel.input_timeseries(flow_df, pet_df, precip_df)
 
-    # %% Initial condition (optional)
+    # %% ========================= optional ===================================
     MyModel.OFmin = OFmin
     MyModel.Beta = Beta
     MyModel.IF = IF
@@ -123,7 +131,8 @@ def Main():
     MyModel.relU = relU
     MyModel.relL = relL
     MyModel.snow = snow
-
+    #======================================================================
+    
     # %% Running model
     Optimal = [val['Default'] for val in Parameters.values()]
     i = 0
@@ -138,36 +147,38 @@ def Main():
             list_Fpar = List_FlowPar(Optimal, Mode=Mode)
             
             # run NAM model
-            MyModel.run_NAMModel(list_Fpar, OUTPUT_dir)                                  #running & output simulation
+            MyModel.run_NAMModel(list_Fpar, OUTPUT_dir)
             
             # check errors
             efficiency = NAM.AnalizeNAM(list_Fpar, MyModel.flow, MyModel.Total_flow, OUTPUT_dir)
             efficiency.calc()
             
-            # find the best parameter-set
+            # find the best set of parameters
             data = efficiency.data.sort_values(by=['NSE'], ascending=False)
             New_Optimal = data.iloc[0].values[3:].tolist()
             
-            # update parameter
+            # break if the best parameters was the same as previous ones
             if New_Optimal == Optimal:
                 print('Iteration {} times\nOptimal values\n{}'.format(i+1, Optimal))
                 break
+            # update parameters
             Optimal = New_Optimal
             
             i += 1
         
-        # Run the optimal model with plot at last & csv output
+        #========================= optional ===================================
+        # Run the optimal model with plot and csv output
         list_Fpar = List_FlowPar(Optimal, Mode='One-time')
-        #running & output simulation
+        #running with output
         MyModel.run_NAMModel(list_Fpar, OUTPUT_dir, isplot=True, isoutput=True)
 
     else:
         isplot=True
         isoutput=True
-
+        
         list_Fpar = List_FlowPar(Optimal, Mode)
         
-        #running & output simulation
+        #running NAM with one time
         MyModel.run_NAMModel(list_Fpar, OUTPUT_dir, isplot=isplot, isoutput=isoutput)
         #analyze output data
         efficiency = NAM.AnalizeNAM(list_Fpar, MyModel.flow, MyModel.Total_flow, OUTPUT_dir)
