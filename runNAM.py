@@ -51,7 +51,9 @@ sub_area = 'SubCatchmArea.csv'                                          # input 
 flow = 'Flow.xlsx'
 pet = 'PET.xlsx'
 precip = 'Precip.xlsx'
-#Temp = 'Temp.xlsx'
+
+snow = False                                                            # will you use the snow module? (you need temperature data!) 
+Temp = 'Temp.xlsx'
 
 relU = 0.08                                                             # Initial values for states
 relL = 0.05
@@ -61,8 +63,7 @@ IF = 0.0
 IFp = 0.0
 BF = 10
 Beta = 0.40
-OFmin = 0.3631
-snow = False                                                            # will you use the snow module? (you need temperature data!)    
+OFmin = 0.3631   
 Ss = 0                                                                  # extra states
 Sw = 0
 
@@ -104,10 +105,8 @@ def Main():
     flow_df = pd.read_excel(fh_flow, sheet_name ='Flow', usecols=[0,1,2,3,4])
     pet_df = pd.read_excel(fh_pet, sheet_name ='PET', usecols=[0,1,2,3,4])
     precip_df = pd.read_excel(fh_precip, sheet_name='Precip', usecols=[0,1,2,3,4])
-    try:
+    if snow:
         temp_df = pd.read_excel(fh_temp, sheet_name='Temp', usecols = [0,1,2,3,4])
-    except:
-        pass
     
     with open(fh_sub_area) as f:
         lines = f.readlines()
@@ -117,7 +116,8 @@ def Main():
     MyModel=NAM.NAM(StartDate, EndDate, EndWUDate, time_step, area)
     # update time series
     MyModel.input_timeseries(flow_df, pet_df, precip_df)
-
+    MyModel.snow = snow
+    
     # %% ========================= optional ===================================
     MyModel.OFmin = OFmin
     MyModel.Beta = Beta
@@ -130,7 +130,6 @@ def Main():
     MyModel.OF = OF
     MyModel.relU = relU
     MyModel.relL = relL
-    MyModel.snow = snow
     #======================================================================
     
     # %% Running model
