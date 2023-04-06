@@ -69,7 +69,7 @@ Ss = 0                                                                  # extra 
 Sw = 0
 
 max_iter = 20
-DEBUG = False
+NAM_DEBUG = False
 
 #####################################################################################
 # %% functions
@@ -132,7 +132,7 @@ def Main():
     MyModel.OF = OF
     MyModel.relU = relU
     MyModel.relL = relL
-    MyModel.DEBUG = DEBUG
+    MyModel.NAM_DEBUG = NAM_DEBUG
     #======================================================================
     
     # %% Running model
