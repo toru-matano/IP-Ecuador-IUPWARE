@@ -61,7 +61,7 @@ class NAM:
         
         self.snow = False
         
-        self.DEBUG = False
+        self.NAM_DEBUG = False
         
         #               Umax, Lmax, CQOF, CKIF, CK1, CK2, TOF, TIF, TG, CKBF, Csnow, T0
         self.para_name = ['Umax', 'Lmax', 'CQOF', 'CKIF', 'CK1', 'CK2', 'TOF', 'TIF', 'TG', 'CKBF', 'Csnow', 'T0']
@@ -314,7 +314,7 @@ class NAM:
             if self.invalid:
                 print('Simulation aborted because one of your parameters is out of range (see message above).')
             else:
-                if DEBUG:
+                if self.NAM_DEBUG:
                     print('**********************************************************************\n' \
                           'Summary of your inputs:\nSTART DATE: \t{}END DATE: \t{}TIME STEP: \t{}' \
                           '\nCalibration parameters:\n'.format(
